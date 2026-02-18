@@ -13,6 +13,11 @@ export const PANCAKE_ROUTER =
   import.meta.env.VITE_PANCAKE_ROUTER ||
   "0xD99D1c33F9fC3444f8101754aBC46c52416550D1";
 
+/** PancakeSwap V2 Factory BNB Testnet (for pair/liquidity lookup) */
+export const PANCAKE_FACTORY =
+  import.meta.env.VITE_PANCAKE_FACTORY ||
+  "0x6725F303b657a9451d8BA641348b6761A6CC7a17";
+
 export const BSCSCAN_TESTNET = "https://testnet.bscscan.com";
 
 /** WBNB on BNB Testnet */
