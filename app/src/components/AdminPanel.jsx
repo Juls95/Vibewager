@@ -35,6 +35,8 @@ export function AdminPanel({ onClose }) {
   } = useWriteContract();
 
   const [liquidityStep, setLiquidityStep] = useState(null); // null | "yes" | "no"
+  const liquidityStepRef = useRef(null);
+  const createdMarketIdRef = useRef(null);
 
   const addLiquidityRef = useRef(null);
 
@@ -64,6 +66,8 @@ export function AdminPanel({ onClose }) {
   });
 
   function proceedAfterCreate(hash, newMarketId) {
+    createdMarketIdRef.current = newMarketId;
+    liquidityStepRef.current = "yes";
     setCreatedMarketId(newMarketId);
     setTxHashes((prev) => [...prev, hash]);
     setStep("adding-liquidity");
@@ -75,14 +79,16 @@ export function AdminPanel({ onClose }) {
     hash: liquidityHash,
     onSuccess: () => {
       setTxHashes((prev) => [...prev, liquidityHash]);
-      // If we just added Yes liquidity, add No liquidity
-      if (liquidityStep === "yes") {
+      const step = liquidityStepRef.current;
+      const marketId = createdMarketIdRef.current;
+      if (step === "yes" && marketId != null) {
+        liquidityStepRef.current = "no";
         setLiquidityStep("no");
-        addLiquidity(false, createdMarketId);
+        addLiquidityRef.current?.(false, marketId);
       } else {
-        // Both done
         setStep("success");
         setLiquidityStep(null);
+        liquidityStepRef.current = null;
       }
     },
   });
@@ -248,16 +254,25 @@ export function AdminPanel({ onClose }) {
 
       {step === "adding-liquidity" && (
         <div>
-          <p className="loading">
-            Adding liquidity to {liquidityStep === "yes" ? "Yes" : "No"} pool...
-          </p>
-          {liquidityHash && (
-            <p className="hint">
-              Tx:{" "}
-              <a href={`${BSCSCAN_TESTNET}/tx/${liquidityHash}`} target="_blank" rel="noopener noreferrer">
-                {liquidityHash.slice(0, 10)}…
-              </a>
+          {!liquidityHash && isAddingLiquidity && (
+            <p className="loading">
+              Confirm the liquidity transaction in your wallet ({liquidityStep === "yes" ? "Yes" : "No"} pool).
             </p>
+          )}
+          {liquidityHash && (
+            <>
+              <p className="loading">
+                {isConfirmingLiquidity ? "Waiting for confirmation…" : liquidityStep === "no" ? "Adding No pool…" : "Done with Yes. Confirm No pool in your wallet."}
+              </p>
+              <p className="hint">
+                <a href={`${BSCSCAN_TESTNET}/tx/${liquidityHash}`} target="_blank" rel="noopener noreferrer">
+                  View transaction on BscScan →
+                </a>
+              </p>
+            </>
+          )}
+          {liquidityError && (
+            <p className="error">{liquidityError.shortMessage ?? liquidityError.message}</p>
           )}
         </div>
       )}

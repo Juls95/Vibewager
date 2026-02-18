@@ -45,8 +45,14 @@ export function MarketList({ onSelectMarket, refreshTrigger }) {
   const markets = useMemo(() => {
     if (!results?.length) return [];
     return results.map((r, i) => {
-      if (r.status !== "success" || !r.result) return null;
-      const [yesToken, noToken, endTime, resolved, outcome] = r.result;
+      if (r.status !== "success" || r.result == null) return null;
+      const res = r.result;
+      // Full ABI returns an object { yesToken, noToken, endTime, resolved, outcome }, not an array
+      const yesToken = typeof res === "object" && "yesToken" in res ? res.yesToken : res[0];
+      const noToken = typeof res === "object" && "noToken" in res ? res.noToken : res[1];
+      const endTime = typeof res === "object" && "endTime" in res ? res.endTime : res[2];
+      const resolved = typeof res === "object" && "resolved" in res ? res.resolved : res[3];
+      const outcome = typeof res === "object" && "outcome" in res ? res.outcome : res[4];
       return {
         id: i + 1,
         yesToken,
