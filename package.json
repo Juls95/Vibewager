@@ -8,6 +8,7 @@
     "test": "hardhat test",
     "deploy:testnet": "hardhat run scripts/deploy.js --network bnbTestnet",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "interact": "hardhat run scripts/interact.js --network bnbTestnet",
     "node": "hardhat node"
   },
   "keywords": [

@@ -1,0 +1,265 @@
+.app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+}
+
+.header {
+  padding: 1rem 1.25rem;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.15rem 0;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.9);
+  margin: 0 0 0.75rem 0;
+}
+
+.wallet-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.connect-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chain-badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.address {
+  font-size: 0.85rem;
+  font-family: ui-monospace, monospace;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: #f59e0b;
+  color: #0f172a;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #fbbf24;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #94a3b8;
+}
+
+.btn-ghost:hover {
+  background: rgba(148, 163, 184, 0.15);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.main {
+  flex: 1;
+  padding: 1.25rem;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hint {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2rem 1rem;
+}
+
+.footer {
+  padding: 1rem 1.25rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #64748b;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.footer a {
+  color: #94a3b8;
+}
+
+.footer a:hover {
+  color: #f59e0b;
+}
+
+/* Market list */
+.market-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.market-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.market-card:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.market-card.resolved {
+  opacity: 0.85;
+}
+
+.market-id {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.market-outcome {
+  font-size: 0.85rem;
+  color: #22c55e;
+  margin-top: 0.5rem;
+}
+
+.addr {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* Bet swap panel */
+.bet-panel {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.97);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  overflow: auto;
+}
+
+.bet-panel h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+.bet-panel .close-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.bet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bet-form input {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bet-form input::placeholder {
+  color: #64748b;
+}
+
+.bet-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.bet-buttons .btn {
+  padding: 0.85rem;
+}
+
+.bet-yes {
+  background: rgba(34, 197, 94, 0.25);
+  color: #22c55e;
+}
+
+.bet-yes:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.35);
+}
+
+.bet-no {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.bet-no:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.loading {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2rem;
+}
+
+.error {
+  color: #ef4444;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 480px) {
+  .bet-panel {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 420px;
+    max-height: 90vh;
+    border-radius: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+  }
+}
