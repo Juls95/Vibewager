@@ -138,10 +138,17 @@ export function BetSwap({ market, onClose }) {
   // This avoids buttons staying disabled when wagmi reports a stuck isPending with no real tx.
   const reallyPending = Boolean(hash) && (isWritePending || isConfirming);
 
+  const liquidity = usePairLiquidity(market?.yesToken, market?.noToken);
+
+  const hasYesLiquidity = liquidity.yes != null && Number(liquidity.yes.wbnb) > 0;
+  const hasNoLiquidity = liquidity.no != null && Number(liquidity.no.wbnb) > 0;
+
   const numAmount = parseAmount(amount);
   const validAmount = !Number.isNaN(numAmount) && numAmount > 0;
   const isResolved = Boolean(market?.resolved);
-  const disabled = !address || reallyPending || !validAmount || isResolved;
+  const baseDisabled = !address || reallyPending || !validAmount || isResolved;
+  const disabledYes = baseDisabled || !hasYesLiquidity;
+  const disabledNo = baseDisabled || !hasNoLiquidity;
 
   const whyDisabled = !address
     ? "Wallet address not available."
@@ -152,8 +159,8 @@ export function BetSwap({ market, onClose }) {
         : !validAmount
           ? "Enter a positive BNB amount (e.g. 0.01)."
           : null;
-
-  const liquidity = usePairLiquidity(market?.yesToken, market?.noToken);
+  const whyYesDisabled = hasYesLiquidity ? null : "No liquidity in Yes pool. Add liquidity first (Admin or script).";
+  const whyNoDisabled = hasNoLiquidity ? null : "No liquidity in No pool. Add liquidity first (Admin or script).";
 
   const buy = (yesSide) => {
     const normalized = String(amount ?? "").replace(/,/g, ".").trim() || "0";
@@ -215,7 +222,8 @@ export function BetSwap({ market, onClose }) {
           <button
             type="button"
             className="btn bet-yes"
-            disabled={disabled}
+            disabled={disabledYes}
+            title={whyYesDisabled ?? undefined}
             onClick={() => buy(true)}
           >
             Buy Yes
@@ -223,12 +231,18 @@ export function BetSwap({ market, onClose }) {
           <button
             type="button"
             className="btn bet-no"
-            disabled={disabled}
+            disabled={disabledNo}
+            title={whyNoDisabled ?? undefined}
             onClick={() => buy(false)}
           >
             Buy No
           </button>
         </div>
+        {(!hasYesLiquidity || !hasNoLiquidity) && (
+          <p className="hint error-block" style={{ marginTop: "0.5rem" }}>
+            Transactions revert without pool liquidity. Add liquidity via <strong>Admin</strong> (when creating the market) or the script (<code>ACTION=add-liquidity MARKET_ID=… BNB_AMOUNT=0.01</code>).
+          </p>
+        )}
         {writeError && <p className="error">{writeError.message}</p>}
         {hash && (
           <p className="hint">

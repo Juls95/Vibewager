@@ -2,6 +2,7 @@ import { useReadContract, useReadContracts } from "wagmi";
 import { useMemo, useEffect } from "react";
 import { VIBEWAGER_ADDRESS } from "../config";
 import { VIBEWAGER_ABI } from "../abi/vibeWagerMarket";
+import { ERC20_NAME_ABI } from "../abi/erc20Name";
 
 export function MarketList({ onSelectMarket, refreshTrigger }) {
   const { data: countBig, isPending: countPending, refetch: refetchCount } = useReadContract({
@@ -47,7 +48,6 @@ export function MarketList({ onSelectMarket, refreshTrigger }) {
     return results.map((r, i) => {
       if (r.status !== "success" || r.result == null) return null;
       const res = r.result;
-      // Full ABI returns an object { yesToken, noToken, endTime, resolved, outcome }, not an array
       const yesToken = typeof res === "object" && "yesToken" in res ? res.yesToken : res[0];
       const noToken = typeof res === "object" && "noToken" in res ? res.noToken : res[1];
       const endTime = typeof res === "object" && "endTime" in res ? res.endTime : res[2];
@@ -63,6 +63,33 @@ export function MarketList({ onSelectMarket, refreshTrigger }) {
       };
     }).filter(Boolean);
   }, [results]);
+
+  const nameReadConfigs = useMemo(
+    () =>
+      markets.map((m) => ({
+        address: m.yesToken,
+        abi: ERC20_NAME_ABI,
+        functionName: "name",
+      })),
+    [markets]
+  );
+
+  const { data: nameResults } = useReadContracts({
+    contracts: nameReadConfigs,
+  });
+
+  const marketNames = useMemo(() => {
+    if (!nameResults?.length) return {};
+    const out = {};
+    nameResults.forEach((r, i) => {
+      const name = r.status === "success" && typeof r.result === "string" ? r.result : null;
+      const marketId = markets[i]?.id;
+      if (marketId && name) {
+        out[marketId] = name.startsWith("Yes: ") ? name.slice(5) : name;
+      }
+    });
+    return out;
+  }, [nameResults, markets]);
 
   const isPending = countPending || marketsPending;
 
@@ -97,7 +124,10 @@ export function MarketList({ onSelectMarket, refreshTrigger }) {
           className={`market-card ${m.resolved ? "resolved" : ""}`}
           onClick={() => onSelectMarket(m)}
         >
-          <div className="market-id">Market #{m.id}</div>
+          <div className="market-id">
+            Market #{m.id}
+            {marketNames[m.id] ? ` · ${marketNames[m.id]}` : ""}
+          </div>
           <div>
             Yes: <code className="addr">{m.yesToken?.slice(0, 10)}…</code>
           </div>

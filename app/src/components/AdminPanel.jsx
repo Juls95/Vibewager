@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
 import { VIBEWAGER_ADDRESS, BSCSCAN_TESTNET } from "../config";
@@ -12,6 +12,8 @@ export function AdminPanel({ onClose }) {
   const [step, setStep] = useState("form"); // form | creating | adding-liquidity | success
   const [createdMarketId, setCreatedMarketId] = useState(null);
   const [txHashes, setTxHashes] = useState([]);
+
+  const fallbackRunRef = useRef(false);
 
   // Read marketCount to get new market ID after creation
   const { data: marketCount, refetch: refetchMarketCount } = useReadContract({
@@ -43,7 +45,6 @@ export function AdminPanel({ onClose }) {
   const { isLoading: isConfirmingCreate } = useWaitForTransactionReceipt({
     hash: createHash,
     onSuccess: (receipt) => {
-      // Get new market ID from MarketCreated event (indexed marketId = topics[1])
       let newMarketId = null;
       const contractLog = receipt?.logs?.find(
         (l) => l.address?.toLowerCase() === VIBEWAGER_ADDRESS.toLowerCase() && l.topics?.[1]
@@ -52,7 +53,6 @@ export function AdminPanel({ onClose }) {
         newMarketId = Number(BigInt(contractLog.topics[1]));
       }
       if (newMarketId == null) {
-        // Fallback: refetch marketCount after a short delay so RPC has new state
         setTimeout(() => {
           refetchMarketCount().then(({ data: newCount }) => {
             const id = newCount ? Number(newCount) : null;
@@ -75,13 +75,26 @@ export function AdminPanel({ onClose }) {
     addLiquidityRef.current?.(true, newMarketId);
   }
 
+  // Fallback: if create tx is confirmed but we're still on "creating" (e.g. onSuccess didn't run), refetch count and move to liquidity
+  useEffect(() => {
+    if (step !== "creating" || !createHash || isConfirmingCreate || fallbackRunRef.current) return;
+    const t = setTimeout(() => {
+      fallbackRunRef.current = true;
+      refetchMarketCount().then(({ data: newCount }) => {
+        const id = newCount ? Number(newCount) : null;
+        if (id != null) proceedAfterCreate(createHash, id);
+      });
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [step, createHash, isConfirmingCreate, refetchMarketCount]);
+
   const { isLoading: isConfirmingLiquidity } = useWaitForTransactionReceipt({
     hash: liquidityHash,
     onSuccess: () => {
       setTxHashes((prev) => [...prev, liquidityHash]);
-      const step = liquidityStepRef.current;
+      const stepCur = liquidityStepRef.current;
       const marketId = createdMarketIdRef.current;
-      if (step === "yes" && marketId != null) {
+      if (stepCur === "yes" && marketId != null) {
         liquidityStepRef.current = "no";
         setLiquidityStep("no");
         addLiquidityRef.current?.(false, marketId);
@@ -233,6 +246,9 @@ export function AdminPanel({ onClose }) {
             <>
               <p className="loading">
                 {isConfirmingCreate ? "Waiting for confirmation…" : "Setting up liquidity…"}
+              </p>
+              <p className="hint" style={{ fontSize: "0.8rem" }}>
+                You will get <strong>two more</strong> wallet prompts (Yes pool, then No pool). If nothing appears, wait ~3s—we’ll retry and prompt again.
               </p>
               <p className="hint">
                 <a href={`${BSCSCAN_TESTNET}/tx/${createHash}`} target="_blank" rel="noopener noreferrer">
