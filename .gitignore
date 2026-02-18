@@ -12,6 +12,12 @@ out/
 .output/
 *.tsbuildinfo
 
+# Hardhat
+artifacts/
+cache/
+typechain/
+typechain-types/
+
 # Environment & secrets
 .env
 .env.local
@@ -48,6 +54,7 @@ coverage/
 *.lcov
 
 # Misc
+DEPLOYMENT.md
 *.local
 .cache/
 tmp/
