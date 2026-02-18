@@ -3,6 +3,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadCont
 import { parseEther, formatEther } from "viem";
 import { PANCAKE_ROUTER, PANCAKE_FACTORY, WBNB } from "../config";
 import { ROUTER_ABI } from "../abi/routerAbi";
+import { ProbabilityChart } from "./ProbabilityChart";
 
 function parseAmount(input) {
   const s = String(input ?? "").replace(/,/g, ".").trim();
@@ -205,6 +206,7 @@ export function BetSwap({ market, onClose }) {
       ) : (
         <p className="hint liquidity-none">No liquidity in pools yet. Add liquidity via Admin or script.</p>
       )}
+      <ProbabilityChart market={market} />
       <div className="bet-form">
         <input
           type="text"
