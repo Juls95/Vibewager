@@ -5,27 +5,34 @@
   flex-direction: column;
   padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   box-sizing: border-box;
+  background-color: #0f172a;
 }
 
 .header {
-  padding: 1rem 1.25rem;
-  background: rgba(15, 23, 42, 0.95);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  padding: 1rem 1.25rem 1rem;
+  background: #0f172a;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
+.header-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
 .logo {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  margin: 0 0 0.15rem 0;
+  margin: 0 0 0.2rem 0;
   letter-spacing: -0.02em;
+  color: #f8fafc;
 }
 
 .tagline {
   font-size: 0.8rem;
-  color: rgba(148, 163, 184, 0.9);
+  color: #94a3b8;
   margin: 0 0 0.75rem 0;
 }
 
@@ -34,6 +41,23 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+
+.wallet-row .address {
+  margin-right: 0.25rem;
+}
+
+/* Admin lives in header: clickable for owner, muted label for others */
+.admin-btn {
+  font-size: 0.85rem;
+  padding: 0.45rem 0.75rem;
+}
+.admin-placeholder {
+  font-size: 0.8rem;
+  color: #64748b;
+  padding: 0.45rem 0.75rem;
+  cursor: default;
+  user-select: none;
 }
 
 .connect-buttons {
@@ -96,15 +120,43 @@
 .main {
   flex: 1;
   padding: 1.25rem;
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
+}
+
+.main-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  min-height: 200px;
 }
 
 .hint {
   text-align: center;
   color: #94a3b8;
-  padding: 2rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.hint-block {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  padding: 1.5rem 1rem;
+  margin: 0;
+}
+
+.owner-status {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0 0 0.75rem 0;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  word-break: break-all;
 }
 
 .footer {
@@ -112,7 +164,9 @@
   text-align: center;
   font-size: 0.8rem;
   color: #64748b;
-  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .footer a {
@@ -124,6 +178,10 @@
 }
 
 /* Market list */
+.market-list-header {
+  margin-bottom: 0.5rem;
+}
+
 .market-list {
   list-style: none;
   margin: 0;
@@ -197,6 +255,14 @@
   gap: 1rem;
 }
 
+.bet-form label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+}
+
 .bet-form input {
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
@@ -243,7 +309,9 @@
 .loading {
   text-align: center;
   color: #94a3b8;
-  padding: 2rem;
+  padding: 1.5rem 1rem;
+  margin: 0;
+  font-size: 0.95rem;
 }
 
 .error {

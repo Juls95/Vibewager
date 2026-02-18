@@ -1,14 +1,21 @@
 import { useReadContract, useReadContracts } from "wagmi";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { VIBEWAGER_ADDRESS } from "../config";
 import { VIBEWAGER_ABI } from "../abi/vibeWagerMarket";
 
-export function MarketList({ onSelectMarket }) {
-  const { data: countBig, isPending: countPending } = useReadContract({
+export function MarketList({ onSelectMarket, refreshTrigger }) {
+  const { data: countBig, isPending: countPending, refetch: refetchCount } = useReadContract({
     address: VIBEWAGER_ADDRESS,
     abi: VIBEWAGER_ABI,
     functionName: "marketCount",
   });
+
+  // Refetch when parent signals (e.g. after closing admin panel)
+  useEffect(() => {
+    if (refreshTrigger != null && refreshTrigger > 0) {
+      refetchCount();
+    }
+  }, [refreshTrigger, refetchCount]);
 
   const count = countBig != null ? Number(countBig) : 0;
 
@@ -25,9 +32,15 @@ export function MarketList({ onSelectMarket }) {
     [count]
   );
 
-  const { data: results, isPending: marketsPending } = useReadContracts({
+  const { data: results, isPending: marketsPending, refetch: refetchMarkets } = useReadContracts({
     contracts: readConfigs,
   });
+
+  useEffect(() => {
+    if (refreshTrigger != null && refreshTrigger > 0 && readConfigs.length > 0) {
+      refetchMarkets();
+    }
+  }, [refreshTrigger, readConfigs.length, refetchMarkets]);
 
   const markets = useMemo(() => {
     if (!results?.length) return [];
@@ -53,14 +66,25 @@ export function MarketList({ onSelectMarket }) {
 
   if (count === 0) {
     return (
-      <p className="hint">
-        No markets yet. Use the interact script to create one (owner only).
-      </p>
+      <div style={{ textAlign: "center" }}>
+        <p className="hint-block">
+          No markets yet. Create one via <strong>Admin</strong> (owner) or the interact script.
+        </p>
+        <button type="button" className="btn btn-ghost" onClick={() => { refetchCount(); refetchMarkets(); }} style={{ marginTop: "0.5rem" }}>
+          Refresh
+        </button>
+      </div>
     );
   }
 
   return (
-    <ul className="market-list">
+    <>
+      <div className="market-list-header">
+        <button type="button" className="btn btn-ghost" onClick={() => { refetchCount(); refetchMarkets(); }} style={{ fontSize: "0.85rem" }}>
+          Refresh list
+        </button>
+      </div>
+      <ul className="market-list">
       {markets.map((m) => (
         <li
           key={m.id}
@@ -82,5 +106,6 @@ export function MarketList({ onSelectMarket }) {
         </li>
       ))}
     </ul>
+    </>
   );
 }
