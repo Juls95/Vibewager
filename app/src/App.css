@@ -403,6 +403,77 @@
   color: #94a3b8;
 }
 
+/* Recent trades section */
+.recent-trades-wrap {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.recent-trades-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.recent-trades-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.recent-trades-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.recent-trade-item {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  font-size: 0.85rem;
+}
+
+.recent-trade-item:last-child {
+  border-bottom: none;
+}
+
+.recent-trade-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.recent-trade-user {
+  color: #60a5fa;
+  text-decoration: none;
+  font-family: ui-monospace, monospace;
+  font-weight: 500;
+}
+
+.recent-trade-user:hover {
+  text-decoration: underline;
+}
+
+.recent-trade-action {
+  color: #cbd5e1;
+}
+
+.recent-trade-amount {
+  color: #94a3b8;
+}
+
+.recent-trade-time {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
 @media (min-width: 480px) {
   .bet-panel {
     left: 50%;

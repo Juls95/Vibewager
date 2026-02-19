@@ -22,3 +22,13 @@ export const BSCSCAN_TESTNET = "https://testnet.bscscan.com";
 
 /** WBNB on BNB Testnet */
 export const WBNB = "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd";
+
+/** Zero address check (case-insensitive) */
+export function isZeroAddress(addr) {
+  if (addr == null || addr === "") return true;
+  try {
+    return BigInt(addr) === 0n;
+  } catch {
+    return true;
+  }
+}

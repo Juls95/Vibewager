@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { usePublicClient, useReadContracts } from "wagmi";
+import { usePublicClient, useReadContracts, useReadContract } from "wagmi";
 import { parseAbiItem } from "viem";
 import {
   LineChart,
@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { PANCAKE_FACTORY, WBNB } from "../config";
+import { PANCAKE_ROUTER, WBNB, isZeroAddress } from "../config";
 
 /*
   Example chart data (mock when no events):
@@ -24,6 +24,17 @@ import { PANCAKE_FACTORY, WBNB } from "../config";
 
 const BLOCKS_PER_DAY = Math.floor((24 * 60 * 60) / 3); // ~28800, BNB ~3s block time
 const FIVE_DAYS_BLOCKS = 5 * BLOCKS_PER_DAY;
+const GETLOGS_CHUNK = 5000; // many RPCs limit getLogs range
+
+const ROUTER_FACTORY_ABI = [
+  {
+    inputs: [],
+    name: "factory",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+];
 
 const FACTORY_ABI = [
   {
@@ -80,25 +91,31 @@ export function ProbabilityChart({ market }) {
 
   const publicClient = usePublicClient();
 
+  const { data: factoryAddress } = useReadContract({
+    address: PANCAKE_ROUTER,
+    abi: ROUTER_FACTORY_ABI,
+    functionName: "factory",
+  });
+
   const pairReads = useMemo(
     () =>
-      yesToken && noToken
+      yesToken && noToken && factoryAddress
         ? [
             {
-              address: PANCAKE_FACTORY,
+              address: factoryAddress,
               abi: FACTORY_ABI,
               functionName: "getPair",
               args: [yesToken, WBNB],
             },
             {
-              address: PANCAKE_FACTORY,
+              address: factoryAddress,
               abi: FACTORY_ABI,
               functionName: "getPair",
               args: [noToken, WBNB],
             },
           ]
         : [],
-    [yesToken, noToken]
+    [yesToken, noToken, factoryAddress]
   );
 
   const { data: pairResults } = useReadContracts({ contracts: pairReads });
@@ -113,10 +130,10 @@ export function ProbabilityChart({ market }) {
 
   const token0Reads = useMemo(() => {
     const out = [];
-    if (yesPair && yesPair !== "0x0000000000000000000000000000000000000000") {
+    if (yesPair && !isZeroAddress(yesPair)) {
       out.push({ address: yesPair, abi: PAIR_ABI, functionName: "token0" });
     }
-    if (noPair && noPair !== "0x0000000000000000000000000000000000000000") {
+    if (noPair && !isZeroAddress(noPair)) {
       out.push({ address: noPair, abi: PAIR_ABI, functionName: "token0" });
     }
     return out;
@@ -135,8 +152,8 @@ export function ProbabilityChart({ market }) {
   const hasPairs =
     yesPair &&
     noPair &&
-    yesPair !== "0x0000000000000000000000000000000000000000" &&
-    noPair !== "0x0000000000000000000000000000000000000000";
+    !isZeroAddress(yesPair) &&
+    !isZeroAddress(noPair);
 
   useEffect(() => {
     if (!publicClient || !hasPairs || yesToken0 == null || noToken0 == null) {
@@ -147,6 +164,24 @@ export function ProbabilityChart({ market }) {
     }
 
     let cancelled = false;
+
+    async function fetchLogsChunked(address, fromBlock, toBlock) {
+      const logs = [];
+      let from = fromBlock;
+      while (from <= toBlock) {
+        const to = from + BigInt(GETLOGS_CHUNK) > toBlock ? toBlock : from + BigInt(GETLOGS_CHUNK);
+        const batch = await publicClient.getLogs({
+          address,
+          event: SYNC_EVENT,
+          fromBlock: from,
+          toBlock: to,
+        });
+        logs.push(...batch);
+        from = to + 1n;
+        if (cancelled) return [];
+      }
+      return logs;
+    }
 
     async function fetchHistory() {
       setLoading(true);
@@ -159,18 +194,8 @@ export function ProbabilityChart({ market }) {
             : 0n;
 
         const [yesLogs, noLogs] = await Promise.all([
-          publicClient.getLogs({
-            address: yesPair,
-            event: SYNC_EVENT,
-            fromBlock,
-            toBlock: "latest",
-          }),
-          publicClient.getLogs({
-            address: noPair,
-            event: SYNC_EVENT,
-            fromBlock,
-            toBlock: "latest",
-          }),
+          fetchLogsChunked(yesPair, fromBlock, blockNumber),
+          fetchLogsChunked(noPair, fromBlock, blockNumber),
         ]);
 
         if (cancelled) return;
@@ -269,6 +294,7 @@ export function ProbabilityChart({ market }) {
     noToken0,
     yesToken,
     noToken,
+    factoryAddress,
   ]);
 
   if (loading) {

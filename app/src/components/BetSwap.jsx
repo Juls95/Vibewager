@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContracts } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContracts, useReadContract } from "wagmi";
 import { parseEther, formatEther } from "viem";
-import { PANCAKE_ROUTER, PANCAKE_FACTORY, WBNB } from "../config";
+import { PANCAKE_ROUTER, WBNB, isZeroAddress } from "../config";
 import { ROUTER_ABI } from "../abi/routerAbi";
 import { ProbabilityChart } from "./ProbabilityChart";
+import { RecentTrades } from "./RecentTrades";
 
 function parseAmount(input) {
   const s = String(input ?? "").replace(/,/g, ".").trim();
@@ -11,6 +12,16 @@ function parseAmount(input) {
   const n = Number(s);
   return Number.isNaN(n) ? NaN : n;
 }
+
+const ROUTER_FACTORY_ABI = [
+  {
+    inputs: [],
+    name: "factory",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+];
 
 const FACTORY_ABI = [
   {
@@ -54,15 +65,21 @@ const PAIR_ABI = [
 ];
 
 function usePairLiquidity(yesToken, noToken) {
+  const { data: factoryAddress } = useReadContract({
+    address: PANCAKE_ROUTER,
+    abi: ROUTER_FACTORY_ABI,
+    functionName: "factory",
+  });
+
   const pairReads = useMemo(
     () =>
-      yesToken && noToken
+      yesToken && noToken && factoryAddress
         ? [
-            { address: PANCAKE_FACTORY, abi: FACTORY_ABI, functionName: "getPair", args: [yesToken, WBNB] },
-            { address: PANCAKE_FACTORY, abi: FACTORY_ABI, functionName: "getPair", args: [noToken, WBNB] },
+            { address: factoryAddress, abi: FACTORY_ABI, functionName: "getPair", args: [yesToken, WBNB] },
+            { address: factoryAddress, abi: FACTORY_ABI, functionName: "getPair", args: [noToken, WBNB] },
           ]
         : [],
-    [yesToken, noToken]
+    [yesToken, noToken, factoryAddress]
   );
   const { data: pairResults } = useReadContracts({ contracts: pairReads });
   const yesPair = pairResults?.[0]?.status === "success" && pairResults[0].result ? pairResults[0].result : null;
@@ -70,14 +87,14 @@ function usePairLiquidity(yesToken, noToken) {
 
   const reserveReads = useMemo(() => {
     const out = [];
-    if (yesPair && yesPair !== "0x0000000000000000000000000000000000000000") {
+    if (yesPair && !isZeroAddress(yesPair)) {
       out.push(
         { address: yesPair, abi: PAIR_ABI, functionName: "getReserves" },
         { address: yesPair, abi: PAIR_ABI, functionName: "token0" },
         { address: yesPair, abi: PAIR_ABI, functionName: "token1" }
       );
     }
-    if (noPair && noPair !== "0x0000000000000000000000000000000000000000") {
+    if (noPair && !isZeroAddress(noPair)) {
       out.push(
         { address: noPair, abi: PAIR_ABI, functionName: "getReserves" },
         { address: noPair, abi: PAIR_ABI, functionName: "token0" },
@@ -91,8 +108,8 @@ function usePairLiquidity(yesToken, noToken) {
   const liquidity = useMemo(() => {
     if (!reserveResults?.length) return { yes: null, no: null };
     const fmt = (r) => (r != null ? formatEther(BigInt(r)) : "0");
-    const yesHasPair = yesPair && yesPair !== "0x0000000000000000000000000000000000000000";
-    const noHasPair = noPair && noPair !== "0x0000000000000000000000000000000000000000";
+    const yesHasPair = yesPair && !isZeroAddress(yesPair);
+    const noHasPair = noPair && !isZeroAddress(noPair);
     const parseReserves = (baseIdx) => {
       if (
         reserveResults[baseIdx]?.status !== "success" ||
@@ -207,6 +224,7 @@ export function BetSwap({ market, onClose }) {
         <p className="hint liquidity-none">No liquidity in pools yet. Add liquidity via Admin or script.</p>
       )}
       <ProbabilityChart market={market} />
+      <RecentTrades market={market} />
       <div className="bet-form">
         <input
           type="text"
